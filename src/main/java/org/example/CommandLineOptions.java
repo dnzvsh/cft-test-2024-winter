@@ -40,4 +40,8 @@ public class CommandLineOptions {
     public String getOutputFilePath(OutputFileNameType type) {
         return Path.of(outputPath, prefix + type).toString();
     }
+
+    public String getOutputPath() {
+        return outputPath;
+    }
 }

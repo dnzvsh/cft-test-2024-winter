@@ -4,6 +4,9 @@ import org.example.enums.OutputFileNameType;
 import org.example.errors.CreateWriterException;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,11 +65,17 @@ public class FilesParser {
                 processLine(line);
             }
         } catch (IOException error) {
-            System.out.println("Ошибка при чтении файла '" + fileName + "': " +  error.getMessage());
+            System.out.println("Ошибка при чтении файла '" + fileName + "': " + error.getMessage());
         }
     }
 
     private BufferedWriter createWriter(OutputFileNameType fileType) throws CreateWriterException {
+        try {
+            createDirectory();
+        } catch (IOException e) {
+            throw new CreateWriterException("Невозможно создать папку: '" + options.getOutputPath() + "'");
+        }
+
         try {
             if (!writers.containsKey(fileType)) {
                 String filePath = options.getOutputFilePath(fileType);
@@ -77,6 +86,15 @@ public class FilesParser {
             return writers.get(fileType);
         } catch (IOException error) {
             throw new CreateWriterException("Невозможно создать FileWriter для  " + fileType);
+        }
+    }
+
+    private void createDirectory() throws IOException {
+        String outputDirectoryName = options.getOutputPath();
+        Path outputDirectoryPath = Paths.get(outputDirectoryName);
+
+        if (!Files.exists(outputDirectoryPath)) {
+            Files.createDirectory(outputDirectoryPath);
         }
     }
 
@@ -143,7 +161,9 @@ public class FilesParser {
             BufferedWriter writer = createWriter(fileType);
             writer.write(string);
             writer.newLine();
-        } catch (CreateWriterException | IOException error) {
+        } catch (CreateWriterException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
             System.out.println("Невозможно записать значение " + fileType);
         }
     }
