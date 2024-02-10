@@ -13,6 +13,5 @@ public class Main {
         } catch (ParseException error) {
             System.err.println(error.getMessage());
         }
-
     }
 }

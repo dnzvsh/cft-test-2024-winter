@@ -23,11 +23,10 @@ public class CommandLineParser {
 
             var fileNames = cmdLine.getArgs();
 
-
             return new CommandLineOptions(outputPath, prefix, append, isShortStatistics, isFullStatistics, fileNames);
         } catch (ParseException e) {
-            new HelpFormatter().printHelp("apache args...", options);
-            throw new ParseException("Can not parse arguments, try again");
+            new HelpFormatter().printHelp("Аргументы:", options);
+            throw new ParseException("Невозможно обработать аргументы командной строки, попробуйте еще раз.");
         }
     }
 }

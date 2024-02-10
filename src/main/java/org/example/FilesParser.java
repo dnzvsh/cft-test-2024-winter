@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.enums.OutputFileNameType;
+import org.example.errors.CreateWriterException;
 
 import java.io.*;
 import java.util.HashMap;
@@ -41,77 +42,81 @@ public class FilesParser {
                 System.out.println("Ошибка при чтении файла '" + fileName + "': " + error.getMessage());
             }
         }
+
+        printStatistics();
+
+        closeWriters();
     }
 
     public void parseFile(String fileName) throws IOException {
         File file = new File(fileName);
 
         if (!file.exists()) {
-            // TODO mb throw?
-            System.out.println("File '" + fileName + " не существует");
+            System.out.println("Файл '" + fileName + "' не существует.");
             return;
         }
 
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 processLine(line);
             }
-            reader.close();
-
-        } catch (FileNotFoundException error) {
-            // TODO update
-            System.out.println("FileNotFoundException: " + error.getMessage());
         } catch (IOException error) {
-            System.out.println("IOException!!! " + error.getMessage());
+            System.out.println("Ошибка при чтении файла '" + fileName + "': " +  error.getMessage());
         }
-        if (shouldPrintStatistics) {
-            printAllStatistics();
-        }
-        closeWriters();
     }
 
-    private BufferedWriter createWriter(OutputFileNameType fileType) throws IOException {
-        if (!writers.containsKey(fileType)) {
-            String filePath = options.getOutputFilePath(fileType);
-            FileWriter fileWriter = new FileWriter(filePath, options.getIsAppend());
-            BufferedWriter writer = new BufferedWriter(fileWriter);
-            writers.put(fileType, writer);
+    private BufferedWriter createWriter(OutputFileNameType fileType) throws CreateWriterException {
+        try {
+            if (!writers.containsKey(fileType)) {
+                String filePath = options.getOutputFilePath(fileType);
+                FileWriter fileWriter = new FileWriter(filePath, options.getIsAppend());
+                BufferedWriter writer = new BufferedWriter(fileWriter);
+                writers.put(fileType, writer);
+            }
+            return writers.get(fileType);
+        } catch (IOException error) {
+            throw new CreateWriterException("Невозможно создать FileWriter для  " + fileType);
         }
-        return writers.get(fileType);
     }
 
     private void closeWriters() {
         for (BufferedWriter writer : writers.values()) {
             try {
-                writer.close();
+                if (writer != null) {
+                    writer.close();
+                }
             } catch (IOException error) {
-                System.out.println("closeWriterErr: " + error.getMessage());
+                System.out.println("Ошибка при закрытии файла: " + error.getMessage());
             }
         }
     }
 
     private void processLine(String line) throws IOException {
-        if (isInteger(line)) {
-            int number = Integer.parseInt(line);
-            writeIntoFile(OutputFileNameType.INTEGER, Integer.toString(number));
-            integersCount++;
-            sumOfIntegers += number;
-            minInteger = Math.min(number, minInteger);
-            maxInteger = Math.max(number, maxInteger);
-        } else if (isFloat(line)) {
-            double number = Double.parseDouble(line);
-            writeIntoFile(OutputFileNameType.FLOAT, Double.toString(number));
-            floatsCount++;
-            sumOfFloats += number;
-            minFloat = Math.min(number, minFloat);
-            maxFloat = Math.max(number, maxFloat);
-        } else {
-            writeIntoFile(OutputFileNameType.STRING, line);
-            stringsCount++;
-            minStringLength = Math.min(line.length(), minStringLength);
-            maxStringLength = Math.max(line.length(), maxStringLength);
+        try {
+            if (isInteger(line)) {
+                int number = Integer.parseInt(line);
+                writeIntoFile(OutputFileNameType.INTEGER, Integer.toString(number));
+                integersCount++;
+                sumOfIntegers += number;
+                minInteger = Math.min(number, minInteger);
+                maxInteger = Math.max(number, maxInteger);
+            } else if (isFloat(line)) {
+                double number = Double.parseDouble(line);
+                writeIntoFile(OutputFileNameType.FLOAT, Double.toString(number));
+                floatsCount++;
+                sumOfFloats += number;
+                minFloat = Math.min(number, minFloat);
+                maxFloat = Math.max(number, maxFloat);
+            } else {
+                writeIntoFile(OutputFileNameType.STRING, line);
+                stringsCount++;
+                minStringLength = Math.min(line.length(), minStringLength);
+                maxStringLength = Math.max(line.length(), maxStringLength);
+            }
+        } catch (Error e) {
+            System.out.println("Ошибка при парсинге строки: '" + line + "'");
+            throw e;
         }
     }
 
@@ -120,7 +125,6 @@ public class FilesParser {
             Integer.parseInt(string);
             return true;
         } catch (NumberFormatException e) {
-            System.out.println("non int: " + e.getMessage());
             return false;
         }
     }
@@ -134,33 +138,41 @@ public class FilesParser {
         }
     }
 
-    private void writeIntoFile(OutputFileNameType fileType, String string) throws IOException {
-        BufferedWriter writer = createWriter(fileType);
-        writer.write(string);
-        writer.newLine();
+    private void writeIntoFile(OutputFileNameType fileType, String string) {
+        try {
+            BufferedWriter writer = createWriter(fileType);
+            writer.write(string);
+            writer.newLine();
+        } catch (CreateWriterException | IOException error) {
+            System.out.println("Невозможно записать значение " + fileType);
+        }
     }
 
-    private void printAllStatistics() {
+    private void printStatistics() {
+        if (!shouldPrintStatistics) {
+            return;
+        }
+
         System.out.println("Статистика");
 
         System.out.println("Для целых чисел:");
         System.out.println("Количество: " + integersCount);
-        if (options.getIsFullStatistics()) {
-            System.out.printf("Минимальное значение: %d\nМаксимальное значене: %d\nСумма: %d\nСреднее: %f.2\n",
+        if (options.getIsFullStatistics() && integersCount > 0) {
+            System.out.printf("Минимальное значение: %d\nМаксимальное значение: %d\nСумма: %d\nСреднее: %g\n",
                     minInteger, maxInteger, sumOfIntegers, (double) sumOfIntegers / integersCount);
 
         }
 
         System.out.println("\nДля вещественных чисел:");
         System.out.println("Количество: " + floatsCount);
-        if (options.getIsFullStatistics()) {
-            System.out.printf("Минимальное значение: %f\nМаксимальное значене: %f\nСумма: %f\nСреднее: %f.2\n",
+        if (options.getIsFullStatistics() && floatsCount > 0) {
+            System.out.printf("Минимальное значение: %g\nМаксимальное значение: %g\nСумма: %g\nСреднее: %g\n",
                     minFloat, maxFloat, sumOfFloats, sumOfFloats / floatsCount);
         }
 
         System.out.println("\nДля строк:");
         System.out.println("Количество: " + stringsCount);
-        if (options.getIsFullStatistics()) {
+        if (options.getIsFullStatistics() && stringsCount > 0) {
             System.out.println("Минимальная длина: " + minStringLength);
             System.out.println("Максимальная длина: " + maxStringLength);
         }
