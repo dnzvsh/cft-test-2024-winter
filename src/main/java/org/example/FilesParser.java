@@ -2,6 +2,7 @@ package org.example;
 
 import org.example.enums.OutputFileNameType;
 import org.example.errors.CreateWriterException;
+import org.example.utils.CheckType;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -112,14 +113,14 @@ public class FilesParser {
 
     private void processLine(String line) throws IOException {
         try {
-            if (isInteger(line)) {
+            if (CheckType.isInteger(line)) {
                 int number = Integer.parseInt(line);
                 writeIntoFile(OutputFileNameType.INTEGER, Integer.toString(number));
                 integersCount++;
                 sumOfIntegers += number;
                 minInteger = Math.min(number, minInteger);
                 maxInteger = Math.max(number, maxInteger);
-            } else if (isFloat(line)) {
+            } else if (CheckType.isFloat(line)) {
                 double number = Double.parseDouble(line);
                 writeIntoFile(OutputFileNameType.FLOAT, Double.toString(number));
                 floatsCount++;
@@ -138,23 +139,6 @@ public class FilesParser {
         }
     }
 
-    private boolean isInteger(String string) {
-        try {
-            Integer.parseInt(string);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-    private boolean isFloat(String string) {
-        try {
-            Float.parseFloat(string);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
 
     private void writeIntoFile(OutputFileNameType fileType, String string) {
         try {
