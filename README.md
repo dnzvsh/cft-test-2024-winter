@@ -18,6 +18,9 @@ java -jar ./build/libs/cft-test-2024-winter-1.0.jar -s examples/in1.txt
 ```
 java -jar ./build/libs/cft-test-2024-winter-1.0.jar -s -a -p sample- -o /result examples/in1.txt examples/in2.txt
 ```
+```
+java -jar ./build/libs/cft-test-2024-winter-1.0.jar -f -o ./result ./examples/in3.txt
+```
 
 ### arguments
 Аргументы:
