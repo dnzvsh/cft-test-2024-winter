@@ -16,7 +16,7 @@
 java -jar ./build/libs/cft-test-2024-winter-1.0.jar -s examples/in1.txt
 ```
 ```
-java -jar ./build/libs/cft-test-2024-winter-1.0.jar -s -a -p sample- -o /result examples/in1.txt examples/in2.txt
+java -jar ./build/libs/cft-test-2024-winter-1.0.jar -s -a -p sample- -o ./result examples/in1.txt examples/in2.txt
 ```
 ```
 java -jar ./build/libs/cft-test-2024-winter-1.0.jar -f -o ./result ./examples/in3.txt
@@ -25,11 +25,11 @@ java -jar ./build/libs/cft-test-2024-winter-1.0.jar -f -o ./result ./examples/in
 ### arguments
 Аргументы:
 
-| Короткая опция | Длинная опция | Аргумент | Описание                               |
-|:--------------:|:-------------:|:--------:|:---------------------------------------|
-|       -a       |   --append    |    -     | Добавляет данные к существующему файлу |
-|       -s       |    --short    |    -     | Вывод короткой статистки               |
-|       -f       |    --full     |    -     | Вывод полной статистки                 |
-|       -o       | --outputPath  |    +     | Путь для выхожных файлов               | 
-|       -p       |   --prefix    |    +     | Префикс выходных файлов                |
+| Короткая опция | Длинная опция | Аргумент | Описание                              |
+|:--------------:|:-------------:|:--------:|:--------------------------------------|
+|       -a       |   --append    |    -     | Режим добавления в существующие файлы |
+|       -s       |    --short    |    -     | Вывод краткой статистики              |
+|       -f       |    --full     |    -     | Вывод полной статистики               |
+|       -o       | --outputPath  |    +     | Путь до выходных файлов               | 
+|       -p       |   --prefix    |    +     | Префикс имен выходных файлов          |
 
